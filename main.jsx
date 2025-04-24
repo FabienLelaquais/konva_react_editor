@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
-import Editor from "./Editor";
+import Stage from "./Stage";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Editor />
+    <Stage />
   </React.StrictMode>
 );

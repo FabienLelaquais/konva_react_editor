@@ -1,5 +1,5 @@
 import Konva from "konva";
-import { EditorAPI } from "./Editor";
+import { StageAPI } from "./Stage";
 
 class Tool {
     private static registry: Record<string, Tool> = {};
@@ -27,25 +27,28 @@ class Tool {
     }
 
     // Lifecycle
-    onActivate(_: EditorAPI): void {
-        console.log(`Selected tool : ${this.label}`);
+    onActivate(_: StageAPI): void {
+        console.log(`onActivate: ${this.label}`);
     }
-    onDeactivate(_: EditorAPI): void {
-        console.log(`Deselected tool : ${this.label}`);
+    onDeactivate(_: StageAPI): void {
+        console.log(`onDeactivate: ${this.label}`);
     }
 
     // Event handlers
-    onClick(e: Konva.KonvaEventObject<PointerEvent>, ed: EditorAPI): void {
+    onClick(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
         console.log("Tool - onClick");
     }
-    onPointerDown(e: Konva.KonvaEventObject<PointerEvent>, ed: EditorAPI): void {
+    onPointerDown(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
         console.log("Tool - onPointerDown");
     }
-    onPointerMove(e: Konva.KonvaEventObject<PointerEvent>, ed: EditorAPI): void {
+    onPointerMove(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
         console.log("Tool - onPointerMove");
     }
-    onPointerUp(e: Konva.KonvaEventObject<PointerEvent>, ed: EditorAPI): void {
+    onPointerUp(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
         console.log("Tool - onPointerUp");
+    }
+    onShapeEvent(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
+        console.log("Tool - onShapeEvent");
     }
 
     // Optional: for tools with settings

@@ -3,7 +3,7 @@ import React from "react";
 import Tool from "./Tool";
 import Checkbox from "@mui/material/Checkbox";
 import { Polyline } from "@mui/icons-material";
-import { EditorAPI } from "./Editor";
+import { StageAPI } from "./Stage";
 
 export class EditPolyTool extends Tool {
     static readonly ID = "editPoly";
@@ -17,13 +17,13 @@ export class EditPolyTool extends Tool {
     get icon(): React.JSX.Element {
         return <Polyline />;
     }
-    onPointerDown(ev: Konva.KonvaEventObject<PointerEvent>, ed: EditorAPI) {
+    onPointerDown(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI) {
         console.log("EditPolyTool-onPointerDown");
     }
-    onPointerMove(ev: Konva.KonvaEventObject<PointerEvent>, ed: EditorAPI) {
+    onPointerMove(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI) {
         console.log("EditPolyTool-onPointerMove");
     }
-    onPointerUp(ev: Konva.KonvaEventObject<PointerEvent>, ed: EditorAPI) {
+    onPointerUp(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI) {
         console.log("EditPolyTool-onPointerUp");
     }
 
