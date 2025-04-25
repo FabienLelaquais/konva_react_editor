@@ -35,20 +35,20 @@ class Tool {
     }
 
     // Event handlers
-    onClick(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
-        console.log("Tool - onClick");
+    onClick(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
+        console.log("Tool - onClick", ev);
     }
-    onPointerDown(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
-        console.log("Tool - onPointerDown");
+    onPointerDown(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
+        console.log("Tool - onPointerDown", ev);
     }
-    onPointerMove(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
-        console.log("Tool - onPointerMove");
+    onPointerMove(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
+        //console.log("Tool - onPointerMove", ev);
     }
-    onPointerUp(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
-        console.log("Tool - onPointerUp");
+    onPointerUp(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
+        console.log("Tool - onPointerUp", ev);
     }
-    onShapeEvent(e: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
-        console.log("Tool - onShapeEvent");
+    onShapeEvent(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI): void {
+        console.log("Tool - onShapeEvent", ev);
     }
 
     // Optional: for tools with settings

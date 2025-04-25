@@ -1,6 +1,6 @@
 import Konva from "konva";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Stage as KStage, Layer } from "react-konva";
+import { Stage as KStage, Layer, Line, Rect, Text, Circle, Path, RegularPolygon, Star, Transformer } from "react-konva";
 import ToolPalette from "./ToolPalette";
 import Tool from "./Tool";
 // Register used tools
@@ -29,11 +29,99 @@ const SHAPE_EVENT_TYPES = [
     "dragmove",
     "dragend",
 ];
+const TRANSFORM_EVENT_TYPES = ["transformstart", "transform", "transformend"];
+
 export interface StageAPI {
     getStage(): Konva.Stage | null;
     getCurrentTool(): Tool | null;
 }
 interface StageProps {}
+
+const KnownShapeTypes: Set<string> = new Set([
+    "Circle",
+    "Layer",
+    "Line",
+    "Rect",
+    "Text",
+    "Path",
+    "RegularPolygon",
+    "Star",
+]);
+
+const DefaultShapes = [
+    {
+        konvaType: "Text",
+        x: 10,
+        y: 10,
+        text: "",
+        fontSize: 24,
+    },
+    {
+        konvaType: "RegularPolygon",
+        x: 300,
+        y: 120,
+        sides: 3,
+        radius: 80,
+        fill: "#00D2FF",
+        stroke: "black",
+        strokeWidth: 4,
+    },
+    {
+        konvaType: "Star",
+        x: 200,
+        y: 400,
+        numPoints: 5,
+        innerRadius: 40,
+        outerRadius: 70,
+        fill: "red",
+        stroke: "black",
+        strokeWidth: 4,
+        taipy: {
+            rotateAngles: [0, 45, 90, 135, 180],
+        },
+    },
+    {
+        konvaType: "Path",
+        x: 50,
+        y: 50,
+        scale: {
+            x: 200,
+            y: 200,
+        },
+        data: "M1.516,0.86A0.068,0.068 0,0,1 1.584,0.928A0.068,0.068 0,0,1 1.516,0.996A0.068,0.068 0,0,1 1.448,0.928A0.068,0.068 0,0,1 1.516,0.86M0.28,0.86L0.472,0.86A0.068,0.068 0,0,1 0.54,0.928A0.068,0.068 0,0,1 0.472,0.996L0.28,0.996A0.068,0.068 0,0,1 0.212,0.928A0.068,0.068 0,0,1 0.28,0.86M0.384,0.0L0.384,0.303L0.0,0.303L0.0,0.4695L0.05,0.482L0.0,0.4945L0.0,1.116A0.187,0.187 0,0,0 0.187,1.303L1.625,1.303A0.187,0.187 0,0,0 1.812,1.116L1.812,0.92L1.762,0.9075L1.812,0.895L1.812,0.741L1.301,0.741L1.239,0.803L1.239,0.96A0.125,0.125 0,0,1 1.114,1.085L0.698,1.085A0.125,0.125 0,0,1 0.573,0.96L0.573,0.0L0.384,0.0Z",
+        fill: "lightgreen",
+        stroke: "black",
+        strokeWidth: 0.01,
+    },
+];
+
+const InnerShape = (props: {
+    shapeType: string;
+    //children: Array<Record<string, any>>;
+    shapeProps: Record<string, any>;
+    eventHandler: (ev: Konva.KonvaEventObject<any>) => void;
+    transformerHandler: (ev: Konva.KonvaEventObject<any>) => void;
+}) => {
+    const shapeRef = React.useRef<Konva.Node>(null);
+
+    useEffect(() => {
+        shapeRef.current?.on(SHAPE_EVENT_TYPES.join(" "), props.eventHandler);
+    }, [props.eventHandler]);
+    useEffect(() => {
+        shapeRef.current?.on(TRANSFORM_EVENT_TYPES.join(" "), props.transformerHandler);
+    }, [props.transformerHandler]);
+
+    if (KnownShapeTypes.has(props.shapeType)) {
+        return (
+            <>
+                {/* @ts-ignore */}
+                <props.shapeType {...props.shapeProps} ref={shapeRef}></props.shapeType>
+            </>
+        );
+    } else {
+        return null;
+    }
+};
 
 const Stage: React.FC<StageProps> = (_: StageProps) => {
     const stageRef = useRef<Konva.Stage>(null);
@@ -63,56 +151,9 @@ const Stage: React.FC<StageProps> = (_: StageProps) => {
             const layer = new Konva.Layer();
             stage.add(layer);
 
-            const add = (layer, shape) => {
+            const UNUSEDadd = (layer, shape) => {
                 layer.add(shape);
                 shape.on(SHAPE_EVENT_TYPES.join(" "), handleShapeEvent);
-            };
-            const text = new Konva.Text({
-                x: 10,
-                y: 10,
-                text: "",
-                fontSize: 24,
-            });
-            add(layer, text);
-            const triangle = new Konva.RegularPolygon({
-                x: 300,
-                y: 120,
-                sides: 3,
-                radius: 80,
-                fill: "#00D2FF",
-                stroke: "black",
-                strokeWidth: 4,
-            });
-            add(layer, triangle);
-            const star = new Konva.Star({
-                x: stage.width() / 4,
-                y: 400,
-                numPoints: 5,
-                innerRadius: 40,
-                outerRadius: 70,
-                fill: "red",
-                stroke: "black",
-                strokeWidth: 4,
-            });
-            add(layer, star);
-            const part = new Konva.Path({
-                x: 50,
-                y: 50,
-                scale: {
-                    x: 200,
-                    y: 200,
-                },
-                data: "M1.516,0.86A0.068,0.068 0,0,1 1.584,0.928A0.068,0.068 0,0,1 1.516,0.996A0.068,0.068 0,0,1 1.448,0.928A0.068,0.068 0,0,1 1.516,0.86M0.28,0.86L0.472,0.86A0.068,0.068 0,0,1 0.54,0.928A0.068,0.068 0,0,1 0.472,0.996L0.28,0.996A0.068,0.068 0,0,1 0.212,0.928A0.068,0.068 0,0,1 0.28,0.86M0.384,0.0L0.384,0.303L0.0,0.303L0.0,0.4695L0.05,0.482L0.0,0.4945L0.0,1.116A0.187,0.187 0,0,0 0.187,1.303L1.625,1.303A0.187,0.187 0,0,0 1.812,1.116L1.812,0.92L1.762,0.9075L1.812,0.895L1.812,0.741L1.301,0.741L1.239,0.803L1.239,0.96A0.125,0.125 0,0,1 1.114,1.085L0.698,1.085A0.125,0.125 0,0,1 0.573,0.96L0.573,0.0L0.384,0.0Z",
-                fill: "lightgreen",
-                stroke: "black",
-                strokeWidth: 0.01,
-            });
-            add(layer, part);
-            return () => {
-                container.removeEventListener("keydown", testHandleKeyDown);
-                container.removeEventListener("pointerdown", testHandlePointerDown);
-                container.removeEventListener("pointermove", testHandlePointerMove);
-                container.removeEventListener("pointerup", testHandlePointerUp);
             };
         }
     }, []);
@@ -137,7 +178,7 @@ const Stage: React.FC<StageProps> = (_: StageProps) => {
             if (currentTool) {
                 currentTool?.onClick(e, stageAPI);
             } else {
-                console.log("Stage - handleKeyDown");
+                console.log("Stage - handleClick");
             }
         },
         [currentTool]
@@ -154,15 +195,35 @@ const Stage: React.FC<StageProps> = (_: StageProps) => {
             if (currentTool) {
                 currentTool.onShapeEvent(ev, stageAPI);
             } else {
-                console.log("Stage - onShapeEvent [UNHANDLED]");
-                console.dir(ev);
+                if (ev.type != "mousemove") {
+                    console.log("Stage - onShapeEvent [UNHANDLED]", ev);
+                }
             }
         },
         [currentTool]
     );
+    const handleTransformerEvent = useCallback((ev) => {
+        console.log("Stage - handleTransformerEvent", ev);
+        const shape = ev.target;
+        const taipyAttrs = shape.getAttr("taipy");
+        const rotationSnaps = taipyAttrs?.rotateAngles;
+        if (rotationSnaps) {
+            const currentRotation = shape.rotation();
+            let closest = rotationSnaps[0];
+            let minDiff = Math.abs(currentRotation - closest);
+            for (let a of rotationSnaps) {
+                const diff = Math.abs(currentRotation - a);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = a;
+                }
+            }
+            shape.rotation(closest);
+        }
+    }, []);
+
     const testHandleKeyDown = useCallback((ev: globalThis.KeyboardEvent) => {
-        console.log("testHandleKeyDown");
-        console.dir(ev);
+        console.log("testHandleKeyDown", ev);
         setToolPaletteVisible((visible) => {
             console.log(`toolPaletteVisible: ${visible}`);
             console.log("Executing setToolPaletteVisible(true)");
@@ -171,16 +232,13 @@ const Stage: React.FC<StageProps> = (_: StageProps) => {
         });
     }, []);
     const testHandlePointerDown = (ev) => {
-        console.log("testHandlePointerDown");
-        console.dir(ev);
+        console.log("testHandlePointerDown", ev);
     };
     const testHandlePointerMove = (ev) => {
-        console.log("testHandlePointerMove");
-        console.dir(ev);
+        //console.log("testHandlePointerMove", ev);
     };
     const testHandlePointerUp = (ev) => {
-        console.log("testHandlePointerUp");
-        console.dir(ev);
+        console.log("testHandlePointerUp", ev);
     };
     return (
         <>
@@ -211,6 +269,19 @@ const Stage: React.FC<StageProps> = (_: StageProps) => {
                 onKeyDown={handleKeyDown}
                 draggable={false}
             >
+                <Layer>
+                    {DefaultShapes.map((shapeDesc) => {
+                        const { konvaType, ...shapeProps } = shapeDesc;
+                        return (
+                            <InnerShape
+                                shapeType={konvaType}
+                                shapeProps={shapeProps}
+                                eventHandler={handleShapeEvent}
+                                transformerHandler={handleTransformerEvent}
+                            />
+                        );
+                    })}
+                </Layer>
                 {/* layers */}
             </KStage>
         </>

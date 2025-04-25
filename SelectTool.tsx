@@ -20,6 +20,7 @@ class SelectTool extends Tool {
     selectionColor: string = "rgba(0,0,255,0.3)";
     startSelX: number;
     startSelY: number;
+    shapeIn: Konva.Shape | null = null;
 
     constructor(props?: SelectToolProps) {
         super();
@@ -48,7 +49,8 @@ class SelectTool extends Tool {
         }
         const layer = stage.findOne("#" + this.layerId) as Konva.Layer;
         if (!layer) {
-            this.layer = new Konva.Layer({ id: this.layerId });
+            this.layer = new Konva.Layer();
+            this.layer.id(this.layerId);
             stage.add(this.layer);
             this.transformer = new Konva.Transformer();
             this.layer.add(this.transformer);
@@ -58,19 +60,22 @@ class SelectTool extends Tool {
             });
             this.layer.add(this.selectionRectangle);
         }
+        this.startSelX = 0;
+        this.startSelY = 0;
+        this.shapeIn = null;
+        this.transformer?.nodes([]);
     }
     onClick(ev: Konva.KonvaEventObject<PointerEvent>, api: StageAPI) {
-        console.log(`SelectTool - onClick (${ev.evt.x},${ev.evt.y})`);
+        console.log("SelectTool - onClick", ev);
     }
     onPointerDown(ev: Konva.KonvaEventObject<PointerEvent>, api: StageAPI) {
-        console.log(`SelectTool - onPointerDown (${ev.evt.x},${ev.evt.y})`);
+        console.log("SelectTool - onPointerDown", ev);
         const stage = api.getStage();
         if (!stage) {
             return;
         }
         this.startSelX = stage?.getPointerPosition()?.x || 0;
         this.startSelY = stage?.getPointerPosition()?.y || 0;
-
         this.selectionRectangle?.setAttrs({
             x: this.startSelX,
             y: this.startSelY,
@@ -82,7 +87,7 @@ class SelectTool extends Tool {
         ev.evt.preventDefault();
     }
     onPointerMove(ev: Konva.KonvaEventObject<PointerEvent>, api: StageAPI) {
-        console.log(`SelectTool - onPointerMove (${ev.evt.x},${ev.evt.y})`);
+        //console.log(`SelectTool - onPointerMove (${ev.evt.x},${ev.evt.y})`);
         const stage = api.getStage();
         if (!stage) {
             return;
@@ -101,16 +106,78 @@ class SelectTool extends Tool {
         ev.cancelBubble = true;
     }
     onPointerUp(ev: Konva.KonvaEventObject<PointerEvent>, api: StageAPI) {
-        console.log(`SelectTool - onPointerUp (${ev.evt.x},${ev.evt.y})`);
-        ev.cancelBubble = true;
-    }
-    onShapeEvent(ev: Konva.KonvaEventObject<PointerEvent>, api: StageAPI): void {
-        console.log(`SelectTool - onShapeEvent (${ev.type})`);
-        console.dir(ev);
-        if (ev.type in ["mousedown", "touchstart"]) {
+        console.log("SelectTool - onPointerUp", ev);
+        const stage = api.getStage();
+        if (!stage) {
+            return;
+        }
+        if (!this.selectionRectangle?.visible()) {
+            return;
+        }
+        // update visibility in timeout, so we can check it in click event
+        setTimeout(() => {
+            this.selectionRectangle?.visible(false);
+        });
+        var selectionBox = this.selectionRectangle?.getClientRect();
+        if (selectionBox.width < 5 || selectionBox.height < 5) {
+            console.log("selectionBox small:", this.shapeIn);
+            if (this.shapeIn) {
+                console.log("selectedShape:", this.shapeIn);
+                this.transformer?.nodes([this.shapeIn]);
+                const taipyAttrs = this.shapeIn.getAttr("taipy");
+                console.log("  taipyAttrs:", taipyAttrs);
+                const rotationSnaps = taipyAttrs?.rotateAngles;
+                this.transformer?.rotationSnaps(rotationSnaps || []);
+                ev.cancelBubble = true;
+            } else {
+                this.transformer?.nodes([]);
+            }
+        } else {
+            const allLayers: Konva.Layer[] = stage.find((node) => {
+                return node.getType() === "Layer" && node.id() != this.layerId;
+            });
+            const allShapes = allLayers.flatMap((l) => l.getChildren());
+            // (shape) => Konva.Util.haveIntersection(box, shape.getClientRect());
+            const selectedShapes = allShapes?.filter((shape) => {
+                const shapeRect = shape.getClientRect();
+                return (
+                    shapeRect.x >= selectionBox.x &&
+                    shapeRect.y >= selectionBox.y &&
+                    shapeRect.x + shapeRect.width <= selectionBox.x + selectionBox.width &&
+                    shapeRect.y + shapeRect.height <= selectionBox.y + selectionBox.height
+                );
+            });
+            console.log("selectedShapes: ", selectedShapes);
+            this.transformer?.nodes(selectedShapes);
+            ev.cancelBubble = true;
         }
     }
-
+    onShapeEvent(ev: Konva.KonvaEventObject<PointerEvent>, api: StageAPI): void {
+        if (ev.type != "mousemove") {
+            console.log("SelectTool - onShapeEvent", ev);
+        }
+        if (ev.type in ["click"]) {
+            this.transformer?.nodes([ev.target]);
+            ev.cancelBubble = true;
+        } else if (ev.type == "mouseenter" && ev.target instanceof Konva.Shape) {
+            this.shapeIn = ev.target;
+        } else if (ev.type == "mouseleave" && ev.target instanceof Konva.Shape) {
+            this.shapeIn = null;
+        }
+    }
+    onShapeTransformer(ev: Konva.KonvaEventObject<PointerEvent>, api: StageAPI): void {
+        if (ev.type != "mousemove") {
+            console.log("SelectTool - onShapeEvent", ev);
+        }
+        if (ev.type in ["click"]) {
+            this.transformer?.nodes([ev.target]);
+            ev.cancelBubble = true;
+        } else if (ev.type == "mouseenter" && ev.target instanceof Konva.Shape) {
+            this.shapeIn = ev.target;
+        } else if (ev.type == "mouseleave" && ev.target instanceof Konva.Shape) {
+            this.shapeIn = null;
+        }
+    }
     getSettings() {
         return <Checkbox title="Snap to grid" />;
     }

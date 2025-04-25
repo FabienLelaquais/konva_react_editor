@@ -18,13 +18,13 @@ export class EditPolyTool extends Tool {
         return <Polyline />;
     }
     onPointerDown(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI) {
-        console.log("EditPolyTool-onPointerDown");
+        console.log("EditPolyTool-onPointerDown", ev);
     }
     onPointerMove(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI) {
-        console.log("EditPolyTool-onPointerMove");
+        //console.log("EditPolyTool-onPointerMove", ev);
     }
     onPointerUp(ev: Konva.KonvaEventObject<PointerEvent>, ed: StageAPI) {
-        console.log("EditPolyTool-onPointerUp");
+        console.log("EditPolyTool-onPointerUp", ev);
     }
 
     getSettings() {

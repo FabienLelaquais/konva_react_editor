@@ -25,23 +25,16 @@ const ToolPalette: React.FC<ToolPaletteProps> = ({ tools, onSelectTool, onClose 
         if (stored) {
             setPosition(JSON.parse(stored));
         }
-        const handleKeyDown = (e: KeyboardEvent) => {
-            console.log("ToolPalette - handleKey");
-            console.dir(e);
-            if (e.key === "Escape" && !e.repeat) {
-                e.preventDefault();
+        const handleKeyDown = (ev: KeyboardEvent) => {
+            console.log("ToolPalette - handleKey", ev);
+            if (ev.key === "Escape" && !ev.repeat) {
+                ev.preventDefault();
                 closePalette();
             }
         };
-        const handlePointerDown = (e: PointerEvent) => {
-            console.log("ToolPalette - handlePointerDown");
-            console.dir(e);
-        };
         window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("pointerdown", handlePointerDown);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
-            window.removeEventListener("pointerdown", handlePointerDown);
         };
     }, []);
 
